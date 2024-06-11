@@ -5,6 +5,7 @@ import androidx.compose.ui.graphics.asSkiaBitmap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jetbrains.skiko.toBufferedImage
+import java.awt.image.BufferedImage
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -18,12 +19,20 @@ object Utils {
     suspend fun saveImageBitmap(imageBitmap: ImageBitmap, filePath: String) {
         withContext(Dispatchers.IO) {
             try {
-                val bufferedImage = imageBitmap.asSkiaBitmap().toBufferedImage()
+                var bufferedImage = imageBitmap.asSkiaBitmap().toBufferedImage()
                 var totalPath = filePath
                 var format = totalPath.substringAfterLast(".", missingDelimiterValue = "")
                 if (format.isEmpty()) {
                     format = "png"
                     totalPath = "$filePath.$format"
+                } else if (format.contains("jpg")) {
+                    val tempBufferedImage = BufferedImage(
+                        bufferedImage.width, bufferedImage.height, BufferedImage.TYPE_INT_RGB
+                    )
+                    val g = tempBufferedImage.createGraphics()
+                    g.drawImage(bufferedImage, 0, 0, null)
+                    g.dispose()
+                    bufferedImage = tempBufferedImage
                 }
 
                 val file = File(totalPath)
