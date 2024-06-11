@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -81,34 +82,31 @@ fun App() {
             }
 
             if (isFileChooserOpen) {
-                AwtFileChooser(
-                    onCloseRequest = {
-                        isFileChooserOpen = false
-                        currentState.value = CurrentState.FileCropScreen(it)
-                        if (it.isNotEmpty()) {
-                            scope.launch {
-                                try {
-                                    val result = imageCropper.crop(
-                                        bmp = ImageIO.read(File(it))
-                                            .toComposeImageBitmap()
-                                    )
-                                    when (result) {
-                                        is CropResult.Cancelled, is CropError -> {
-                                            currentState.value = CurrentState.MainScreen
-                                        }
-
-                                        is CropResult.Success -> {
-                                            currentState.value =
-                                                CurrentState.PreviewScreen(result.bitmap, it)
-                                        }
+                AwtFileChooser(onCloseRequest = {
+                    isFileChooserOpen = false
+                    currentState.value = CurrentState.FileCropScreen(it)
+                    if (it.isNotEmpty()) {
+                        scope.launch {
+                            try {
+                                val result = imageCropper.crop(
+                                    bmp = ImageIO.read(File(it)).toComposeImageBitmap()
+                                )
+                                when (result) {
+                                    is CropResult.Cancelled, is CropError -> {
+                                        currentState.value = CurrentState.MainScreen
                                     }
-                                } catch (_: IIOException) {
-                                    currentState.value = CurrentState.MainScreen
+
+                                    is CropResult.Success -> {
+                                        currentState.value =
+                                            CurrentState.PreviewScreen(result.bitmap, it)
+                                    }
                                 }
+                            } catch (_: IIOException) {
+                                currentState.value = CurrentState.MainScreen
                             }
                         }
                     }
-                )
+                })
             }
 
             when (currentState.value) {
@@ -162,30 +160,25 @@ fun App() {
                         Button(
                             onClick = {
                                 isFileSaveOpen.value = true
-                            },
-                            modifier = Modifier.weight(0.15f)
-                                .padding(16.dp)
+                            }, modifier = Modifier.weight(0.15f).padding(16.dp)
                         ) {
                             Text("Save")
                         }
                     }
 
                     if (isFileSaveOpen.value) {
-                        FileSaveDialog(
-                            file = preview.filePath.substringAfterLast("/"),
+                        FileSaveDialog(file = preview.filePath.substringAfterLast("/"),
                             onCloseRequest = {
                                 isFileSaveOpen.value = false
                                 if (it.isNotEmpty()) {
                                     scope.launch {
                                         Utils.saveImageBitmap(
-                                            preview.image,
-                                            it
+                                            preview.image, it
                                         )
                                         currentState.value = CurrentState.MainScreen
                                     }
                                 }
-                            }
-                        )
+                            })
                     }
                 }
 
@@ -196,7 +189,7 @@ fun App() {
                     val state = rememberPagerState {
                         listFiles.size
                     }
-                    HorizontalPager(state) {
+                    HorizontalPager(state, modifier = Modifier.matchParentSize()) {
                         LaunchedEffect(state.currentPage) {
                             scope.launch {
                                 if (!listFiles[it].isFile) {
@@ -214,8 +207,7 @@ fun App() {
 
                                         is CropResult.Success -> {
                                             Utils.saveImageBitmap(
-                                                result.bitmap,
-                                                listFiles[it].absolutePath
+                                                result.bitmap, listFiles[it].absolutePath
                                             )
                                             if (state.currentPage + 1 >= state.pageCount) {
                                                 currentState.value = CurrentState.MainScreen
@@ -229,9 +221,12 @@ fun App() {
                                 }
                             }
                         }
+
                         imageCropper.cropState?.let {
                             ImageCropperDialog(
                                 state = it,
+                                currentNum = state.currentPage,
+                                totalCount = listFiles.size,
                                 dialogPadding = PaddingValues(0.dp),
                                 dialogShape = RoundedCornerShape(0.dp),
                                 style = CropperStyle(

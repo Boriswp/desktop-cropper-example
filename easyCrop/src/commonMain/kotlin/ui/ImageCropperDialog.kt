@@ -6,11 +6,14 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
+import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -37,6 +40,47 @@ private val CropperDialogProperties = (DialogProperties(
     dismissOnBackPress = false,
     dismissOnClickOutside = false
 ))
+
+@Composable
+fun ImageCropperDialog(
+    state: CropState,
+    currentNum: Int,
+    totalCount: Int,
+    style: CropperStyle = DefaultCropperStyle,
+    dialogProperties: DialogProperties = CropperDialogProperties,
+    dialogPadding: PaddingValues = PaddingValues(16.dp),
+    dialogShape: Shape = RoundedCornerShape(8.dp),
+    topBar: @Composable (CropState) -> Unit = { DefaultTopBar(it) },
+    cropControls: @Composable BoxScope.(CropState) -> Unit = { DefaultControls(it, false) }
+) {
+    CompositionLocalProvider(LocalCropperStyle provides style) {
+        Dialog(
+            onDismissRequest = { state.done(accept = false) },
+            properties = dialogProperties,
+        ) {
+            Surface(
+                modifier = Modifier.padding(dialogPadding),
+                shape = dialogShape,
+            ) {
+                Column {
+                    topBar(state)
+                    Text(
+                        "${currentNum}/${totalCount}",
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clipToBounds()
+                    ) {
+                        CropperPreview(state = state, modifier = Modifier.fillMaxSize())
+                        cropControls(state)
+                    }
+                }
+            }
+        }
+    }
+}
 
 
 @Composable
