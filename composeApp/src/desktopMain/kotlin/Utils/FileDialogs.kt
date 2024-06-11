@@ -50,12 +50,28 @@ fun AwtFileChooser(onCloseRequest: (result: String) -> Unit) {
         val frame = JFrame()
         frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
         val fileChooser = JFileChooser()
-
         val filter = FileNameExtensionFilter(
             "Images", "png", "jpg"
         )
         fileChooser.fileFilter = filter
 
+        val returnValue = fileChooser.showOpenDialog(frame)
+        if (returnValue == JFileChooser.APPROVE_OPTION) {
+            onCloseRequest(fileChooser.selectedFile.absolutePath)
+        } else {
+            onCloseRequest("")
+        }
+        frame
+    }, dispose = JFrame::dispose)
+}
+
+@Composable
+fun AwtDirectoryChooser(onCloseRequest: (result: String) -> Unit) {
+    AwtWindow(create = {
+        val frame = JFrame()
+        frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
+        val fileChooser = JFileChooser()
+        fileChooser.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
         val returnValue = fileChooser.showOpenDialog(frame)
         if (returnValue == JFileChooser.APPROVE_OPTION) {
             onCloseRequest(fileChooser.selectedFile.absolutePath)
