@@ -35,6 +35,9 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.toRect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.unit.dp
 import com.mr0xf00.easycrop.CropShape
 import cropperproject.easycrop.generated.resources.flip_hor
@@ -75,7 +78,7 @@ internal fun CropperControls(
                 Icon(painterResource(Res.drawable.rot_right), null)
             }
             IconButton(onClick = { state.flipHorizontal() }) {
-                Icon(painterResource( Res.drawable.flip_hor), null)
+                Icon(painterResource(Res.drawable.flip_hor), null)
             }
             IconButton(onClick = { state.flipVertical() }) {
                 Icon(painterResource(Res.drawable.flip_ver), null)
@@ -136,7 +139,6 @@ private fun ButtonsBar(
         }
     }
 }
-
 
 
 @Composable
@@ -201,7 +203,8 @@ private fun AspectSelectionMenu(
         } else {
             val aspect = aspects[i - 1]
             val isSelected = region.size.isAspect(aspect)
-            IconButton(onClick = { onRegion(region.setAspect(aspect)) }) {
+            IconButton(
+                onClick = { onRegion(region.setAspect(aspect)) }) {
                 Text(
                     "${aspect.x}:${aspect.y}",
                     color = if (isSelected) selectedTint else unselectedTint
